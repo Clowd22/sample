@@ -10,7 +10,6 @@ public class MainApp
 
     public static string FindMAXPalindrome(string num)
     {
-        if (string.IsNullOrEmpty(num)) return string.Empty;
 
         int length = num.Length;
         string maxPalindrome = ""; 
