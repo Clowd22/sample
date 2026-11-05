@@ -1,57 +1,68 @@
 ﻿using System;
-using System.IO;
-using System.Collections.Generic;
 
 public class MainApp
 {
     static public void Main(string[] args)
     {
-        var lines = GetStdin();
-        if (lines.Length == 0) return;
-
-        string s = lines[0].Trim();
-        char[] chars = s.ToCharArray();
-
-        // 1. 各桁の文字を昇順にソートする
-        Array.Sort(chars);
-
-        // 2. 先頭が '0' の場合、0ではない最初の文字を先頭に持っていく
-        if (chars[0] == '0')
-        {
-            int nonZeroIndex = -1;
-            for (int i = 0; i < chars.Length; i++)
-            {
-                if (chars[i] != '0')
-                {
-                    nonZeroIndex = i;
-                    break;
-                }
-            }
-
-            if (nonZeroIndex != -1)
-            {
-                // 0ではない最小の文字を先頭にし、それまでを後ろにずらす
-                char target = chars[nonZeroIndex];
-                for (int i = nonZeroIndex; i > 0; i--)
-                {
-                    chars[i] = chars[i - 1];
-                }
-                chars[0] = target;
-            }
-        }
-
-        // 結果を出力
-        Console.WriteLine(new string(chars));
+        string num = Console.ReadLine();
+        Console.WriteLine(FindMAXPalindrome(num));
     }
 
-    static private string[] GetStdin()
+    /// <summary>
+    /// 端から比較するロジックで回文を探し、より大きいものが見つかるたびに更新するメソッド
+    /// </summary>
+    /// <param name="num">対象の文字列</param>
+    /// <returns>一番大きい回文</returns>
+    public static string FindMAXPalindrome(string num)
     {
-        var list = new List<string>();
-        string line;
-        while ((line = Console.ReadLine()) != null)
+        if (string.IsNullOrEmpty(num)) return string.Empty;
+
+        int length = num.Length;
+        string maxPalindrome = ""; // 見つかった回文を保持しておく変数
+
+        // 1. 検証する文字列の開始位置をずらす
+        for (int start = 0; start < length; start++)
         {
-            list.Add(line);
+            // 2. 終了位置を後ろから手前に向かってスキャン（長い組み合わせから順に確認）
+            for (int end = length - 1; end >= start; end--)
+            {
+                // すでに保持している最大の長さ以下の範囲しかなければ、探す必要がないのでスキップ
+                if (end - start + 1 <= maxPalindrome.Length)
+                {
+                    break;
+                }
+
+                // 3. 最初と最後の文字から始めて、内側へ向かって一致するか検証する
+                int l = start;
+                int r = end;
+                bool isPalindrome = true;
+
+                while (l < r)
+                {
+                    if (num[l] != num[r])
+                    {
+                        isPalindrome = false;
+                        break;
+                    }
+                    l++;
+                    r--;
+                }
+
+                // 4. 回文であることが確認できたら、保持しているものと比較して更新する
+                if (isPalindrome)
+                {
+                    string foundPalindrome = num.Substring(start, end - start + 1);
+
+                    // 次に見つかった回文が、いま保持しているものより大きければ更新
+                    if (foundPalindrome.Length > maxPalindrome.Length)
+                    {
+                        maxPalindrome = foundPalindrome;
+                    }
+                    break; // この開始位置での最長が見つかったので、次のスタート位置へ進む
+                }
+            }
         }
-        return list.ToArray();
+
+        return maxPalindrome;
     }
 }
