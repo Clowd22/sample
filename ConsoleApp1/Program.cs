@@ -1,90 +1,79 @@
 ﻿using System;
+using System.Text;
 
 public class MainApp
 {
     public static void Main(string[] args)
     {
-        string? num = Console.ReadLine();
+        string num = Console.ReadLine();
         if (num is not null)
         {
             Console.WriteLine(FindMAXPalindrome(num));
         }
     }
 
+    /// <summary>
+    /// Manacherのアルゴリズムを使用して文字列内の最長回文を探索する
+    /// </summary>
     public static string FindMAXPalindrome(string num)
     {
-
-        int length = num.Length;
-        if (length == 0)
+        // 1. 各文字の間に '#' を挟み、両端にも '#' を置いた拡張文字列を作成
+        var sb = new StringBuilder(num.Length * 2 + 1);
+        sb.Append('#');
+        foreach (char c in num)
         {
-            return string.Empty;
+            sb.Append(c);
+            sb.Append('#');
         }
+        string t = sb.ToString();
+        int n = t.Length;
 
-        int bestStart = 0;
-        int bestLength = 1;
+        // 2. Manacherのメイン計算
+        int[] p = new int[n];
+        int center = 0, right = 0;
 
-        var oddRadius = new int[length];
-        int left = 0;
-        int right = -1;
-        for (int i = 0; i < length; i++)
+        for (int i = 0; i < n; i++)
         {
-            int radius = i > right
-                ? 1
-                : Math.Min(oddRadius[left + right - i], right - i + 1);
+            int mirror = 2 * center - i;
 
-            while (i - radius >= 0 && i + radius < length && num[i - radius] == num[i + radius])
+            if (right > i)
             {
-                radius++;
+                p[i] = Math.Min(right - i, p[mirror]);
+            }
+            else
+            {
+                p[i] = 0;
             }
 
-            oddRadius[i] = radius;
-            int start = i - radius + 1;
-            int palindromeLength = 2 * radius - 1;
-            if (palindromeLength > bestLength ||
-                palindromeLength == bestLength && start < bestStart)
+            // 中心 i から左右に拡張して回文を探索
+            while (i - 1 - p[i] >= 0 && i + 1 + p[i] < n && t[i - 1 - p[i]] == t[i + 1 + p[i]])
             {
-                bestStart = start;
-                bestLength = palindromeLength;
+                p[i]++;
             }
 
-            if (i + radius - 1 > right)
+            // 右端の境界を超えた場合は中心と右端を更新
+            if (i + p[i] > right)
             {
-                left = i - radius + 1;
-                right = i + radius - 1;
-            }
-        }
-
-        var evenRadius = new int[length];
-        left = 0;
-        right = -1;
-        for (int i = 0; i < length; i++)
-        {
-            int radius = i > right
-                ? 0
-                : Math.Min(evenRadius[left + right - i + 1], right - i + 1);
-
-            while (i - radius - 1 >= 0 && i + radius < length && num[i - radius - 1] == num[i + radius])
-            {
-                radius++;
-            }
-
-            evenRadius[i] = radius;
-            int start = i - radius;
-            int palindromeLength = 2 * radius;
-            if (palindromeLength > bestLength ||
-                palindromeLength == bestLength && start < bestStart)
-            {
-                bestStart = start;
-                bestLength = palindromeLength;
-            }
-
-            if (i + radius - 1 > right)
-            {
-                left = i - radius;
-                right = i + radius - 1;
+                center = i;
+                right = i + p[i];
             }
         }
 
-        return num.Substring(bestStart, bestLength);
+        // 3. 最大の回文長と中心インデックスを特定
+        int maxLen = 0;
+        int centerIndex = 0;
+
+        for (int i = 0; i < n; i++)
+        {
+            if (p[i] > maxLen)
+            {
+                maxLen = p[i];
+                centerIndex = i;
+            }
+        }
+
+        // 4. 変換前の元の文字列における開始位置を計算して切り出し
+        int start = (centerIndex - maxLen) / 2;
+        return num.Substring(start, maxLen);
     }
 }
